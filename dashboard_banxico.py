@@ -257,22 +257,22 @@ with abajo_izq:
     st.pyplot(fig)
 
 with abajo_der:
-    st.subheader("Promedio por mes y año")
-    calor = principal.pivot_table(index="Anio", columns="Mes",
-                                  values="Valor", aggfunc="mean")
+    st.subheader("Volatilidad móvil")
+    # Mínimo 5 días: con una ventana de 1 la desviación estándar no existe.
+    ventana = max(suavizado, 5)
+    variacion = principal["Valor"].pct_change() * 100
+    # Se anualiza multiplicando por la raíz de 252 días hábiles.
+    vol = variacion.rolling(ventana).std() * (252 ** 0.5)
 
     fig, ax = plt.subplots(figsize=(6, 3.4))
-    imagen = ax.imshow(calor, cmap="YlGnBu", aspect="auto")
-    fig.colorbar(imagen, ax=ax)
-    ax.set_xticks(range(len(calor.columns)))
-    ax.set_xticklabels(["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul",
-                        "Ago", "Sep", "Oct", "Nov", "Dic"][:len(calor.columns)])
-    ax.set_yticks(range(len(calor.index)))
-    ax.set_yticklabels(calor.index)
-    ax.grid(False)
+    ax.plot(principal["Fecha"], vol.values, color=ROJO, linewidth=1.6)
+    ax.fill_between(principal["Fecha"], vol.values, color=ROJO, alpha=0.12)
+    ax.set_xlabel("Fecha")
+    ax.set_ylabel("Volatilidad anualizada (%)")
     st.pyplot(fig)
-    st.caption("Escala secuencial: el valor tiene orden pero no un cero "
-               "con significado, así que no va divergente.")
+    st.caption(f"Desviación estándar de la variación diaria en ventanas de "
+               f"{ventana} días, anualizada. Los picos marcan periodos de "
+               "mayor incertidumbre en el mercado.")
 
 
 # ─── Datos ─────────────────────────────────────────────────────────────
